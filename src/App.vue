@@ -3,6 +3,8 @@
   const todos = ref([]);
   const names = ref('')
   const input_names = ref('')
+  const input_desc = ref('')
+  const show_desc = ref(false);
   const input_category = ref(null)
   // const todo_asc = computed(()=> todos.value.sort((a,b)=>{
   //   return b.createdAt - a.createdAt
@@ -10,12 +12,16 @@
   watch(names, (newval)=>{
     localStorage.setItem('names', newval)
   })
+  const showDesc = ()=>{
+    show_desc.value = !show_desc.value
+  }
   const addTodo = ()=>{
-    if(input_names.value.trim() === '' || input_category.value === null){
+    if(input_names.value.trim() === '' || input_category.value === null || input_desc.value.trim() === ''){
       return
     }
     todos.value.push({
       names: input_names.value,
+      desc: input_desc.value,
       category: input_category.value,
       done: false,
       createdAt: new Date().getTime()
@@ -51,10 +57,11 @@
       <form @submit.prevent="addTodo">
         <h3 class="text-sm mb-4 font-semibold">What's on your to-do list?</h3>
         <input 
-        class="p-4 border-2 border-blue-400 w-full md:w-1/2 shadow-md p-2 rounded-lg focus:outline-none" type="text" 
+        class="p-4 mb-2 border-2 border-blue-400 w-full md:w-1/2 shadow-md p-2 rounded-lg focus:outline-none" type="text" 
         placeholder="e.g Go and buy groceries" 
         v-model="input_names"
         >
+        <textarea name="description" placeholder="Add a description" id="" cols="5" rows="3" v-model="input_desc" class="w-full md:w-1/2 border-2 border-blue-400 block p-2 rounded-md shadow-md focus:outline-none"></textarea>
         <h4 class="text-sm mb-4 font-semibold mt-4">Pick a category</h4>
 
         <div class="w-full md:w-1/2 flex justify-around items-center">
@@ -90,12 +97,20 @@
       <div class="flex flex-col space-y-2">
         <div v-for="(todo, index) in todos" v-bind:class="`w-full md:w-1/2 p-4 rounded-md shadow-md flex space-x-3 items-center justify-between border-2 ${todo.done ? ' border-green-400' : 'border-red-400'}`" :key="index">
           <label>
-            <input type="checkbox" :class="`${checkCate ? 'accent-blue-500' : 'accent-pink-500'}`" v-model="todo.done">
+            <input type="checkbox" :class="`${checkCate ? 'bg-blue-500' : 'bg-pink-500'}`" v-model="todo.done">
           </label>
           <div>
             <input type="text" class="text-center capitalize" v-model="todo.names">
           </div>
-          <button class="p-1 rounded-md bg-red-500 text-white text-sm font-semibold" @click="removeTodo(todo)">Delete</button>
+          <div v-if="show_desc">,
+            <input type="text" name="" id="" v-model="todo.description">
+          </div>
+          <div class="flex space-x-2">
+            <button class="p-1 rounded-md bg-blue-500 text-white text-sm font-semibold" @click="showDesc">
+              description
+            </button>
+            <button class="p-1 rounded-md bg-red-500 text-white text-sm font-semibold" @click="removeTodo(todo)">Delete</button>  
+          </div>
         </div>
       </div>   
     </div>

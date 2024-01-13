@@ -26,7 +26,7 @@
     todos.value = todos.value.filter(t=> t != todo)
   }
   const checkCate = ()=>{
-    if(input_category === 'buisness'){
+    if(input_category.value === 'buisness'){
       return true
     }
   }

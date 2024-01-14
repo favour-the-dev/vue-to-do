@@ -1,47 +1,66 @@
 <script setup>
   import {ref, onMounted,  watch } from 'vue';
+  import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
   const todos = ref([]);
-  const names = ref('')
+  const names = ref('') 
   const input_names = ref('')
   const input_desc = ref('')
-  const show_desc = ref(false);
   const input_category = ref(null)
+  const notodo = ref(true)
   // const todo_asc = computed(()=> todos.value.sort((a,b)=>{
   //   return b.createdAt - a.createdAt
   // }))
-  watch(names, (newval)=>{
-    localStorage.setItem('names', newval)
-  })
-  const showDesc = ()=>{
-    show_desc.value = !show_desc.value
+  const checkCate = (todo)=>{
+      todo.category === 'Buisness' ? todo.desccol = true : todo.desccol= false
+  }
+  const showDesc = (todo)=>{
+    todo.showdesc = !todo.showdesc
+    checkCate(todo)
   }
   const addTodo = ()=>{
     if(input_names.value.trim() === '' || input_category.value === null || input_desc.value.trim() === ''){
+      toast.warn("FILL IN ALL FIELDS!");
       return
     }
     todos.value.push({
       names: input_names.value,
       desc: input_desc.value,
       category: input_category.value,
+      desccol: false,
+      showdesc: false,
       done: false,
       createdAt: new Date().getTime()
     })
-    console.log('add todo')
+    checkTodo(todos.value)
   }
   const removeTodo = (todo)=>{
     todos.value = todos.value.filter(t=> t != todo)
+    checkTodo(todos.value)
   }
-  const checkCate = ()=>{
-    if(input_category.value === 'buisness'){
-      return true
+
+  const checkTodo = (todos)=>{
+    todos = JSON.parse(JSON.stringify(todos))
+    console.log(todos.length)
+    if (todos.length > 0){
+      notodo.value = false
+    }else if(todos.length <= 0){
+      notodo.value = true
     }
+    console.log(todos, notodo.value)
   }
+
+  watch(names, (newval)=>{
+    localStorage.setItem('names', newval)
+  })
   watch(todos, (newval)=>{
     localStorage.setItem('todos', JSON.stringify(newval))
   }, {deep: true})
+
   onMounted(()=>{
     names.value = localStorage.getItem('names') || ''
     todos.value = JSON.parse(localStorage.getItem('todos')) || []
+    checkTodo(todos.value)
   })
   
 </script>
@@ -69,7 +88,7 @@
             <input 
             type="radio" 
             name="category" 
-            value="buisness" 
+            value="Buisness" 
             v-model="input_category"
             class="accent-blue-600"
             >
@@ -93,23 +112,27 @@
     </div>
 
     <div class="flex flex-col">
-      <h2 class="mb-4">TO-DO-LIST</h2>   
-      <div class="flex flex-col space-y-2">
-        <div v-for="(todo, index) in todos" v-bind:class="`w-full md:w-1/2 p-4 rounded-md shadow-md flex space-x-3 items-center justify-between border-2 ${todo.done ? ' border-green-400' : 'border-red-400'}`" :key="index">
+      <h2 class="mb-4">TO-DO-LIST</h2> 
+      <div class="w-full md:w-1/2 uppercase font-bold h-full text-center" v-if="notodo">
+        NO to-dos yet!
+      </div>  
+      <div v-else-if="!notodo" class="flex flex-col space-y-2">
+        <div v-for="(todo, index) in todos" v-bind:class="`w-full md:w-1/2 p-1 rounded-md shadow-md flex space-x-3 items-center justify-between border-2 relative ${todo.done ? ' border-green-400' : 'border-red-400'}`" :key="index">
           <label>
-            <input type="checkbox" :class="`${checkCate ? 'bg-blue-500' : 'bg-pink-500'}`" v-model="todo.done">
+            <input type="checkbox" :class="`${todo.desccol ? 'bg-blue-500' : 'bg-pink-500'}`" v-model="todo.done">
           </label>
-          <div>
-            <input type="text" class="text-center capitalize" v-model="todo.names">
+          <div class="w-2/3">
+            <input type="text" class="text-center w-full capitalize" v-model="todo.names">
           </div>
-          <div v-if="show_desc">,
-            <input type="text" name="" id="" v-model="todo.description">
+          <div v-if="todo.showdesc" :class="`absolute ${todo.desccol ? 'bg-blue-500' : 'bg-pink-500'} w-2/3 md:w-1/2 left-[2.5%] md:left-[15%] lg:left-[25%] text-xs md:text-md text-center h-full font-mono`">
+            <h2 class="uppercase font-semibold">Description of task: {{todo.names}}</h2>
+            <input type="text" class="bg-transparent " name="" id="" v-model="todo.desc">
           </div>
-          <div class="flex space-x-2">
-            <button class="p-1 rounded-md bg-blue-500 text-white text-sm font-semibold" @click="showDesc">
+          <div class="flex flex-col space-y-1">
+            <button class="p-1 rounded-md bg-blue-500 text-white text-xs md:text-sm font-semibold" @click="showDesc(todo)">
               description
             </button>
-            <button class="p-1 rounded-md bg-red-500 text-white text-sm font-semibold" @click="removeTodo(todo)">Delete</button>  
+            <button class="p-1 rounded-md bg-red-500 text-white text-xs md:text-sm font-semibold" @click="removeTodo(todo)">Delete</button>  
           </div>
         </div>
       </div>   
